@@ -10,11 +10,16 @@ class UniversalForensicEngine:
     # -------------------------------------------------------------------------
     # PILLAR 1: MONEY ENGINE (Revenue Assurance & Overcharge Calculation)
     # -------------------------------------------------------------------------
-    @staticmethod
-    def audit_money_pillar(df: pd.DataFrame, sms_cap: float = 4.00) -> pd.DataFrame:
-        """Audits fee overcharges, SMS rates, and duplicate debit payloads."""
-        df_money = df.copy()
-        findings = []
+   # 1. FIX OPERATIONS PILLAR: Require explicit timestamp before running off-hours check
+@staticmethod
+def audit_operations_pillar(df: pd.DataFrame) -> pd.DataFrame:
+    df_ops = df.copy()
+    # Only run off-hours check if real timestamps (non-midnight) are present
+    has_time = df_ops['transaction_date'].dt.time.ne(pd.Timestamp("00:00:00").time()).any()
+    if not has_time:
+        return pd.DataFrame()  # Suppress false positives when only date is available
+    
+    # Run off-hours logic...
 
         # 1. SMS Notification Overcharges
         sms_mask = df_money['narration'].str.contains('SMS', case=False, na=False) & (df_money['debit'] > 0)
